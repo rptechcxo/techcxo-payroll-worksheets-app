@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "payroll-worksheet-app"
+version = "0.1.0"
+description = ""
+authors = ["robypoteau <roby.poteau@techcxo.com>"]
+packages = [{ include = "app", from = "src" }]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^2.2.3"
+openpyxl = "^3.1.5"
+pandera = "^0.23.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+app = "app.main:main"
