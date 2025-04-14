@@ -23,6 +23,20 @@ files = [
 ]
 
 [[package]]
+name = "holidays"
+version = "0.70"
+description = "Open World Holidays Framework"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "holidays-0.70-py3-none-any.whl", hash = "sha256:a9306aa836393d1a30bf750774825652dd83f399207617c6ae66577e7e63183f"},
+    {file = "holidays-0.70.tar.gz", hash = "sha256:98b6bd583406e9efcc3a10a33d6b38744719a360c4f2541931a284dff034f89e"},
+]
+
+[package.dependencies]
+python-dateutil = "*"
+
+[[package]]
 name = "mypy-extensions"
 version = "1.0.0"
 description = "Type system extensions for programs checked with the mypy type checker."
@@ -484,4 +498,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "0a684f8493b89d0e3df4bcacd5fcd3b9edbf6ea881bba8e4b57ac0ec90794644"
+content-hash = "375fb1f025b68bda9ad88dface25fce5a95ae5273da33cc4511df0ad5f597ee8"
