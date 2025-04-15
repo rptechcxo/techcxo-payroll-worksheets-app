@@ -1,5 +1,5 @@
-from pandera import DataFrameSchema, Column
-from pandera.dtypes import Float, String, Int, Bool
+from pandera import DataFrameSchema, Column, Index
+from pandera.dtypes import Float, String
 
 
 _details_schema = {
@@ -29,15 +29,15 @@ _details_schema = {
 
 
 DetailsSchema = DataFrameSchema(
-    columns=_details_schema
+    columns=_details_schema,
 )
 
 _deduction_report_schema = {
-    "ceecode": Column(String, nullable=False),
     "namount": Column(Float, nullable=True, coerce=False),
     "cdeductcode": Column(String, nullable=False),
 }
 
 DeductionReportSchema = DataFrameSchema(
-    columns=_deduction_report_schema
+    columns=_deduction_report_schema,
+    index=Index(String, name="ceecode")
 )

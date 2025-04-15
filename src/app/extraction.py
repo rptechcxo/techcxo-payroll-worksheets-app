@@ -34,14 +34,21 @@ def import_details_table(src_path: str) -> DataFrame:
 
     return non_empty
 
+
 def import_deduction_report_table(src_path: str) -> DataFrame:
     columns = [
         "ceecode",
         "namount",
         "cdeductcode"
     ]
-    df = read_excel(src_path, sheet_name="Deduction Report",usecols=columns)
+    df = read_excel(
+        src_path,
+        sheet_name="Deduction Report",
+        usecols=columns,
+        index_col=0
+    )
     df = df.dropna(how="any")
+    df["cdeductcode"] = df["cdeductcode"].str.strip()
 
     return df
 

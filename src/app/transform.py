@@ -1,58 +1,48 @@
-df_to_output_map = {
-    ('Guaranteed Payments', 'Internal Time') : "Internal Time",
-    (                   '',      'Earnings') : "Earnings",
-    (              'Bonus',       'Revenue') : "Bonus",
-    (              'Bonus',        'Equity') : "Bonus",
-    (            'Expense',     'Reimburse') : "Expense Reimbursement",
-    (     'Pre-tax 401(k)',     'Deduction') : "401(k) deferral:  Pre-tax",
-    (        'Roth 401(k)',     'Deduction') : "401(k) deferral:  Roth",
-    (     'Profit Sharing',      'Withheld') : "401(k) Profit Sharing",
-    (        'Safe Harbor',      'Withheld') : "401(k) Safe Harbor",
-    (        '401(k) loan',     'repayment') : "401(k) Loan Repayment",
-    (              'Group',        'Health') : "Health insurance",
-    (                   '',        'Dental') : "Dental insurance",
-    (                   '',        'Vision') : "Vision insurance",
-    (                   '',           'LTD') : "LTD insurance",
-    (            'Partner',    'Receivable') : "Partner Receivable",
-    (                'A/R',      'Backouts') : "A/R Backouts",
-    (                'A/R',      'Addbacks') : "A/R Addbacks",
-    (              'Admin',           'Fee') : "Admin Fee",
-    (              'Other',   'Adjustments') : "Other Adjustments",
+from typing import List
+from pandas import DataFrame
+
+
+_output_map = {
+    "Internal Time": [("Guaranteed Payments", "Internal Time")],
+    "Earnings": [("", "Earnings")],
+    "Bonus": [("Bonus", "Revenue"), ("Bonus", "Equity")],
+    "Expense Reimbursement": [("Expense", "Reimburse")],
+    "401(k) deferral: Pre-tax": [("Pre-tax 401(k)", "Deduction")],
+    "401(k) deferral: Roth": [("Roth 401(k)", "Deduction")],
+    "401(k) Profit Sharing": [("Profit Sharing", "Withheld")],
+    "401(k) Safe Harbor": [("Safe Harbor", "Withheld")],
+    "401(k) Loan Repayment": [("401(k) loan", "repayment")],
+    "Health insurance": [("Group", "Health")],
+    "Dental insurance": [("", "Dental")],
+    "Vision insurance": [("", "Vision")],
+    "LTD insurance": [("", "LTD")],
+    "Short Term Disability Ins.": ["ST2"],
+    "HSA Deduction": ["KHA"],
+    "Employee Voluntary Life Ins.": ["EVL"],
+    "Spouse Voluntary Life Ins.": ["SVL"],
+    "Child Voluntary Life Ins.": ["CVL"],
+    "Partner Receivable": [("Partner", "Receivable")],
+    "A/R Backouts": [("A/R", "Backouts")],
+    "A/R Addbacks": [("A/R", "Addbacks")],
+    "Admin Fee": [("Admin", "Fee")],
+    "Other Adjustments": [("Other", "Adjustments")]
 }
 
 
-ceecode_to_output_map = {
-    "ST2" : "Short Term Disability Ins. ",
-    "KHA" : "HSA Deduction",
-    "EVL" : "Employee Voluntary Life Ins.",
-    "SVL" : "Spouse Voluntary Life Ins.",
-    "CVL" : "Child Voluntary Life Ins.",
-}
+def data_to_worksheet(detail_data: DataFrame, deduction_data: DataFrame) -> List:
+    output = []
+    for key in _output_map:
+        temp = 0.0
+        # print(f"{_output_map[key][0] = }")
+        if isinstance(_output_map[key][0], tuple):
+            for indices in _output_map[key]:
+                temp = temp + detail_data.loc[indices].item()
+        elif isinstance(_output_map[key][0], str):
+            for index in _output_map[key]:
+                if index in deduction_data.index:
+                    temp = temp + deduction_data.loc[index]["namount"]
+        else:
+            raise ValueError(f"Key {key} not found in either detail_data or deduction_data")
+        output.append(temp)
 
-
-pay_worksheet_desc = [
-    "Internal Time",
-    "Earnings",
-    "Bonus",
-    "Expense Reimbursement",
-    "401(k) deferral:  Pre-tax",
-    "401(k) deferral:  Roth",
-    "401(k) Profit Sharing",
-    "401(k) Safe Harbor",
-    "401(k) Loan Repayment",
-    "Health insurance",
-    "Dental insurance",
-    "Vision insurance",
-    "LTD insurance",
-    "Short Term Disability Ins. ",
-    "HSA Deduction",
-    "Employee Voluntary Life Ins.",
-    "Spouse Voluntary Life Ins.",
-    "Child Voluntary Life Ins.",
-    "Partner Receivable",
-    "A/R Backouts",
-    "A/R Addbacks",
-    "Admin Fee",
-    "Other Adjustments"
-]
-
+    return output
