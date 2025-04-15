@@ -1,5 +1,12 @@
 from logging import basicConfig, getLogger, INFO
-from app.utils import worksheet_name, find_cell, MONTH, get_adjusted_tenth, duplicate_worksheet
+from app.utils import (
+    worksheet_name,
+    find_cell,
+    MONTH,
+    get_adjusted_tenth,
+    duplicate_worksheet,
+    copy_comments
+)
 from app.extraction import import_tables
 from app.transform import data_to_worksheet
 from glob import glob
@@ -23,6 +30,9 @@ def main():
         "year_month": "2025-12-31",
     }
     year_month = datetime.strptime(inputs["year_month"], "%Y-%m-%d") + timedelta(days=28)
+    month = int(inputs["year_month"].split("-")[1]) - 1
+    year = year_month.strftime("%Y")
+    details, deductions = import_tables(inputs["data_path"])
 
     partner_list = glob(path.join(
         inputs["partner_worksheet_folder"],
@@ -31,8 +41,6 @@ def main():
     
     for partner in partner_list:
         wb = load_workbook(partner)
-        year = year_month.strftime("%Y")
-        
         sheet_name = worksheet_name(wb, year)
         if sheet_name is None:
             logger.warning(f"Sheet {year} not found in <{path.basename(partner)}>")
@@ -48,7 +56,6 @@ def main():
         partner_name = ws.cell(row=coord[0]+3, column=coord[1]).value
         employee_code = ws.cell(row=coord[0]+4, column=coord[1]).value
 
-        month = int(inputs["year_month"].split("-")[1]) - 1
         coord = find_cell(ws, MONTH[month])
         ws.cell(row=coord[0]-1, column=coord[1]).value = get_adjusted_tenth(inputs["year_month"])
 
@@ -67,6 +74,8 @@ def main():
             else:
                 cell.value = output_data[i]
                 logger.warning("Cell %s is not empty, overwriting value", cell.coordinate)
+        
+        copy_comments(inputs["data_path"], wb, partner_name, MONTH[month])
 
         wb.save(partner) 
 

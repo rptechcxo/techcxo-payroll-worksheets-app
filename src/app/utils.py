@@ -1,6 +1,8 @@
+from typing import List
 import holidays
 from datetime import date, datetime, timedelta
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
+
 
 
 MONTH = [
@@ -33,7 +35,7 @@ def find_cell(ws, target_value: str, regex: bool=False) -> tuple[int, int] | Non
         for cell in row:
             if cell.value is None:
                 continue
-            elif target_value in cell.value:
+            elif target_value in str(cell.value):
                 return (cell.row, cell.column)
 
     return None
@@ -119,41 +121,37 @@ def duplicate_worksheet(wb: Workbook, sheet_name: str, save_path: str):
     wb.save(save_path)
 
 
-def is_business_day(date_to_check: date, country_code:str = 'US'):
+def copy_comments(src_path: str, wb: Workbook, partner_name: str, month: str):
     """
-    Checks if a given date is a business day, excluding weekends and bank holidays.
+    Copies comments from the first worksheet to the new worksheet.
 
     Args:
-        date_to_check (date): The date to check.
-        country_code (str, optional): The ISO 3166-1 alpha-2 country code. Defaults to 'US'.
+        wb (Workbook): The workbook object.
+        partner_name (str): The name of the partner.
+        columns (List[str]): List of columns to copy comments from.
+        month (str): The month for which the comments are being copied.
 
     Returns:
-        bool: True if the date is a business day, False otherwise.
+        None
     """
+    
+    columns = [
+        "Partner Receivable",
+        "A/R Backouts",
+        "A/R Addbacks",
+        "Other Adjustments"
+    ] 
 
-    if date_to_check.weekday() >= 5:  # Saturday or Sunday
-        return False
+    src_wb = load_workbook(src_path)
+    src_ws = src_wb['Details']
+    dst_ws = wb.active
 
-    country_holidays = holidays.country_holidays(country_code, years=date_to_check.year)
-    if date_to_check in country_holidays:
-        return False
+    src_row = find_cell(src_ws, partner_name)[0]
+    dst_col = find_cell(dst_ws, month)[1]
 
-    return True
+    for col in columns:
+        src_col = find_cell(src_ws, col.split(" ")[-1])[1]
+        dst_row = find_cell(dst_ws, col)[0]
 
-
-# Example Usage:
-"""
-date_to_check = date(2025, 5, 26)  # Memorial Day 2025
-
-if is_business_day(date_to_check, country_code='US'):
-    print(f"{date_to_check} is a business day.")
-else:
-    print(f"{date_to_check} is not a business day.")
-
-# Find the next business day
-current_date = date(2025, 5, 26)
-while not is_business_day(current_date):
-    current_date += timedelta(days=1)
-
-print(f"The next business day is: {current_date}")
-"""
+        src_comment = src_ws.cell(row=src_row, column=src_col).comment
+        dst_ws.cell(row=dst_row, column=dst_col).comment = src_comment
