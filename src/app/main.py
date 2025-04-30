@@ -13,7 +13,9 @@ from glob import glob
 from os import path
 from openpyxl import load_workbook
 from pandas import Series
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from gooey import Gooey, GooeyParser
+
 
 logger = getLogger(__name__)
 basicConfig(
@@ -23,12 +25,41 @@ basicConfig(
 )
 
 
+def to_eom(dt: datetime) -> datetime:
+    # Get the first day of the next month
+    if dt.month == 12:
+        first_of_next = dt.replace(year=dt.year + 1, month=1, day=1)
+    else:
+        first_of_next = dt.replace(month=dt.month + 1, day=1)
+
+    # Subtract 1 microsecond to get the last moment of the current month
+    eom = first_of_next - timedelta(days=1)
+    return str(eom)
+
+
+@Gooey(
+    program_name='Payroll Worksheets',
+    default_size=(600, 500),
+    required_cols=1,
+    optional_cols=2,
+    body_bg_color="#000000",
+    header_bg_color="#000000",
+    footer_bg_color="#000000",
+    # richtext_controls=True
+)
 def main():
+    parser = GooeyParser(description="Payroll Worksheets")
+    parser.add_argument('output_folder', help="Folder with all the partner worksheets", widget='DirChooser') 
+    parser.add_argument('input_file', help="File with the payroll data", widget='FileChooser')
+    parser.add_argument('year_month', help="Year and Month to process", widget='DateChooser', default=to_eom(datetime.now()).split(" ")[0]),
+    args = parser.parse_args()
+
     inputs = {
-        "data_path": "requirement-docs/2025-01-31 Payroll (Monthly).xlsx",
-        "partner_worksheet_folder": "requirement-docs/worksheets",
-        "year_month": "2025-12-31",
+        "data_path": args.input_file,
+        "partner_worksheet_folder": args.output_folder,
+        "year_month": to_eom(datetime.strptime(args.year_month, "%Y-%m-%d")).split(" ")[0],
     }
+    # raise Exception(f"{inputs['year_month']}")
     year_month = datetime.strptime(inputs["year_month"], "%Y-%m-%d") + timedelta(days=28)
     month = int(inputs["year_month"].split("-")[1]) - 1
     year = year_month.strftime("%Y")
@@ -40,6 +71,7 @@ def main():
     ))
     
     for partner in partner_list:
+        print(partner)
         wb = load_workbook(partner)
         sheet_name = worksheet_name(wb, year)
         if sheet_name is None:
