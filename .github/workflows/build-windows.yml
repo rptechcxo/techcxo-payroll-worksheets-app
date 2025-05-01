@@ -3,7 +3,6 @@ name: Build Windows EXE
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -34,7 +33,7 @@ jobs:
           pyinstaller --onefile --name "payroll-worksheets" app/main.py
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: payroll-worksheets
           path: dist/payroll-worksheets.exe
