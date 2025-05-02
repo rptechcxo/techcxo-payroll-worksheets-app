@@ -15,6 +15,7 @@ from openpyxl import load_workbook
 from pandas import Series
 from datetime import datetime, timedelta, date
 from gooey import Gooey, GooeyParser
+from pandas import DataFrame
 
 
 logger = getLogger(__name__)
@@ -92,10 +93,13 @@ def main():
         ws.cell(row=coord[0]-1, column=coord[1]).value = get_adjusted_tenth(inputs["year_month"])
 
         detail_data = details.loc[partner_name]
-        deduction_data = deductions.loc[employee_code]
-        if isinstance(deduction_data, Series):
-            deduction_data = deduction_data.to_frame().T
-        deduction_data = deduction_data.set_index("cdeductcode")
+        if employee_code in deductions.index:
+            deduction_data = deductions.loc[employee_code]
+            if isinstance(deduction_data, Series):
+                deduction_data = deduction_data.to_frame().T
+            deduction_data = deduction_data.set_index("cdeductcode")
+        else:
+            deduction_data = DataFrame()
 
         output_data  = data_to_worksheet(detail_data, deduction_data)
         for i, row in enumerate(range(coord[0]+1, coord[0]+len(output_data)+1)):
