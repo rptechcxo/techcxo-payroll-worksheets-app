@@ -43,9 +43,11 @@ def to_eom(dt: datetime) -> datetime:
     default_size=(600, 500),
     required_cols=1,
     optional_cols=2,
-    body_bg_color="#000000",
-    header_bg_color="#000000",
-    footer_bg_color="#000000",
+    body_bg_color="#989898",
+    header_bg_color="#989898",
+    footer_bg_color="#989898",
+    terminal_font_color="#FFFFFF",
+    terminal_background_color="#A9A9A9",
     # richtext_controls=True
 )
 def main():
