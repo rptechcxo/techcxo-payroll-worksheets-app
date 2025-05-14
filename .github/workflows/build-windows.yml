@@ -23,14 +23,11 @@ jobs:
           poetry config virtualenvs.create false
 
       - name: Install dependencies
-        run: poetry install
-
-      - name: Install PyInstaller
-        run: pip install pyinstaller
+        run: poetry install --with build
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --name "payroll-worksheets" src/app/main.py
+          poetry run pyinstaller --onefile --name "payroll-worksheets" src/app/main.py --hidden-import=holidays
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
