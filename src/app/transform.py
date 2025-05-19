@@ -40,7 +40,7 @@ def data_to_worksheet(detail_data: DataFrame, deduction_data: DataFrame) -> List
         elif isinstance(_output_map[key][0], str):
             for index in _output_map[key]:
                 if index in deduction_data.index:
-                    temp = temp + deduction_data.loc[index]["namount"]
+                    temp = temp - deduction_data.loc[index]["namount"]
         else:
             raise ValueError(f"Key {key} not found in either detail_data or deduction_data")
         output.append(temp)
