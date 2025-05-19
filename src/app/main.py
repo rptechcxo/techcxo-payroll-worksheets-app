@@ -45,10 +45,7 @@ def to_eom(dt: datetime) -> datetime:
     optional_cols=2,
     body_bg_color="#989898",
     header_bg_color="#989898",
-    footer_bg_color="#989898",
-    terminal_font_color="#FFFFFF",
-    terminal_background_color="#A9A9A9",
-    # richtext_controls=True
+    footer_bg_color="#989898"
 )
 def main():
     parser = GooeyParser(description="Payroll Worksheets")

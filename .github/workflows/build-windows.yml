@@ -27,7 +27,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          poetry run pyinstaller --onefile --name "payroll-worksheets" src/app/main.py --hidden-import=holidays
+          poetry run pyinstaller --onefile --name "payroll-worksheets" src/app/main.py --hidden-import=holidays.countries
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
