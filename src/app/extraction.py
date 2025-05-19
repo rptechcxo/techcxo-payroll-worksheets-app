@@ -31,6 +31,8 @@ def import_details_table(src_path: str) -> DataFrame:
     non_empty.columns = new_header
     non_empty = non_empty.iloc[2:]  # Skip the first two rows
     non_empty = non_empty.apply(to_numeric, errors='coerce')  # Converts non-numeric to NaN
+    non_empty.index = non_empty.index.str.lower().str.strip()
+    non_empty.index = non_empty.index.str.replace(r'\s+', ' ', regex=True)
 
     return non_empty
 

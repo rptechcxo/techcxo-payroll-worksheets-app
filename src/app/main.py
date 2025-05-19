@@ -12,10 +12,12 @@ from app.transform import data_to_worksheet
 from glob import glob
 from os import path
 from openpyxl import load_workbook
+from openpyxl.styles import Alignment
 from pandas import Series
 from datetime import datetime, timedelta, date
 from gooey import Gooey, GooeyParser
 from pandas import DataFrame
+import re
 
 
 logger = getLogger(__name__)
@@ -59,7 +61,7 @@ def main():
         "partner_worksheet_folder": args.output_folder,
         "year_month": to_eom(datetime.strptime(args.year_month, "%Y-%m-%d")).split(" ")[0],
     }
-    # raise Exception(f"{inputs['year_month']}")
+
     year_month = datetime.strptime(inputs["year_month"], "%Y-%m-%d") + timedelta(days=28)
     month = int(inputs["year_month"].split("-")[1]) - 1
     year = year_month.strftime("%Y")
@@ -71,48 +73,56 @@ def main():
     ))
     
     for partner in partner_list:
-        print(partner)
-        wb = load_workbook(partner)
-        sheet_name = worksheet_name(wb, year)
-        if sheet_name is None:
-            logger.warning(f"Sheet {year} not found in <{path.basename(partner)}>")
-            logger.info(f"Creating new Sheet {year} in <{path.basename(partner)}>")
-            sheet_name = year
-            duplicate_worksheet(wb, sheet_name, partner)
+        logger.info(f"Processing {partner.split('/')[-1]}...")
+        try:
+            wb = load_workbook(partner)
+            sheet_name = worksheet_name(wb, year)
+            if sheet_name is None:
+                logger.warning(f"Sheet {year} not found in <{path.basename(partner)}>")
+                logger.info(f"Creating new Sheet {year} in <{path.basename(partner)}>")
+                sheet_name = year
+                duplicate_worksheet(wb, sheet_name, partner)
 
-        wb = load_workbook(partner)
-        wb.active = wb[sheet_name]
-        ws = wb.active
+            wb = load_workbook(partner)
+            wb.active = wb[sheet_name]
+            ws = wb.active
 
-        coord = find_cell(ws, "TechCXO")
-        partner_name = ws.cell(row=coord[0]+3, column=coord[1]).value
-        employee_code = ws.cell(row=coord[0]+4, column=coord[1]).value
+            coord = find_cell(ws, "TechCXO")
+            partner_name = ws.cell(row=coord[0]+3, column=coord[1]).value
+            partner_name = partner_name.strip().lower()
+            partner_name = re.sub(r'\s+', ' ', partner_name)
+            employee_code = ws.cell(row=coord[0]+4, column=coord[1]).value
 
-        coord = find_cell(ws, MONTH[month])
-        ws.cell(row=coord[0]-1, column=coord[1]).value = get_adjusted_tenth(inputs["year_month"])
+            coord = find_cell(ws, MONTH[month])
+            ws.cell(row=coord[0]-1, column=coord[1]).value = get_adjusted_tenth(inputs["year_month"])
+            ws.cell(row=coord[0]-1, column=coord[1]).alignment = Alignment(horizontal="center")
 
-        detail_data = details.loc[partner_name]
-        if employee_code in deductions.index:
-            deduction_data = deductions.loc[employee_code]
-            if isinstance(deduction_data, Series):
-                deduction_data = deduction_data.to_frame().T
-            deduction_data = deduction_data.set_index("cdeductcode")
-        else:
-            deduction_data = DataFrame()
-
-        output_data  = data_to_worksheet(detail_data, deduction_data)
-        for i, row in enumerate(range(coord[0]+1, coord[0]+len(output_data)+1)):
-            cell = ws.cell(row=row, column=coord[1])
-            cell.number_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
-            if cell.value is None or str(cell.value).strip() == "":
-                cell.value = output_data[i]
+            detail_data = details.loc[partner_name]
+            if employee_code in deductions.index:
+                deduction_data = deductions.loc[employee_code]
+                if isinstance(deduction_data, Series):
+                    deduction_data = deduction_data.to_frame().T
+                deduction_data = deduction_data.set_index("cdeductcode")
             else:
-                cell.value = output_data[i]
-                logger.warning("Cell %s is not empty, overwriting value", cell.coordinate)
-        
-        copy_comments(inputs["data_path"], wb, partner_name, MONTH[month])
+                deduction_data = DataFrame()
 
-        wb.save(partner) 
+            output_data  = data_to_worksheet(detail_data, deduction_data)
+            for i, row in enumerate(range(coord[0]+1, coord[0]+len(output_data)+1)):
+                cell = ws.cell(row=row, column=coord[1])
+                cell.number_format = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
+                if cell.value is None or str(cell.value).strip() == "":
+                    cell.value = output_data[i]
+                else:
+                    cell.value = output_data[i]
+                    logger.warning("Cell %s is not empty, overwriting value", cell.coordinate)
+            
+            copy_comments(inputs["data_path"], wb, partner_name, MONTH[month])
+
+            wb.save(partner)
+            logger.info(f"Finished processing")
+        except Exception as e:
+            logger.warning(f"Partner file failed to update!")
+            logger.warning(f"Failure reason: {e}")
 
 if __name__ == "__main__":
     main()

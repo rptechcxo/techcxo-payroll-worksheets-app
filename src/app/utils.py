@@ -30,11 +30,14 @@ def worksheet_name(wb: Workbook, expected_sheet_name: str):
     return None
 
 
-def find_cell(ws, target_value: str, regex: bool=False) -> tuple[int, int] | None:
+def find_cell(ws, target_value: str, regex: bool=False, case_sensitive=True) -> tuple[int, int] | None:
     for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
         for cell in row:
             if cell.value is None:
                 continue
+            elif not case_sensitive:
+                if target_value.lower() in str(cell.value).lower():
+                    return (cell.row, cell.column)
             elif target_value in str(cell.value):
                 return (cell.row, cell.column)
 
@@ -111,7 +114,7 @@ def duplicate_worksheet(wb: Workbook, sheet_name: str, save_path: str):
         for cell in row:
             cell.value = None
             cell.comment = None
-            cell.number_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
+            cell.number_format = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
     
     for row in ws.iter_rows(min_row=s[0]-1, max_row=s[0]-1, min_col=s[1], max_col=s[1]+12):
         for cell in row:
@@ -146,7 +149,7 @@ def copy_comments(src_path: str, wb: Workbook, partner_name: str, month: str):
     src_ws = src_wb['Details']
     dst_ws = wb.active
 
-    src_row = find_cell(src_ws, partner_name)[0]
+    src_row = find_cell(src_ws, partner_name, case_sensitive=False)[0]
     dst_col = find_cell(dst_ws, month)[1]
 
     for col in columns:
