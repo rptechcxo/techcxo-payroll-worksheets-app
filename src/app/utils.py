@@ -157,7 +157,7 @@ def copy_comments(src_path: str, wb: Workbook, partner_name: str, month: str):
     dst_ws = wb.active
 
     src_row = find_cell(src_ws, partner_name, case_sensitive=False)[0]
-    dst_col = find_cell(dst_ws, month)[1]
+    dst_col = find_cell(dst_ws, month, exact_match=True)[1]
 
     for col in columns:
         src_col = find_cell(src_ws, col.split(" ")[-1])[1]
