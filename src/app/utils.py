@@ -30,15 +30,22 @@ def worksheet_name(wb: Workbook, expected_sheet_name: str):
     return None
 
 
-def find_cell(ws, target_value: str, regex: bool=False, case_sensitive=True) -> tuple[int, int] | None:
+def is_match(target: str, compare: str, exact_match: bool=False) -> bool:
+    if exact_match:
+        return target.strip() == compare.strip()
+    else:
+        return target.strip() in compare.strip()
+
+
+def find_cell(ws, target_value: str, regex: bool=False, case_sensitive=True, exact_match=False) -> tuple[int, int] | None:
     for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
         for cell in row:
             if cell.value is None:
                 continue
             elif not case_sensitive:
-                if target_value.lower() in str(cell.value).lower():
+                if is_match(target_value.lower(), str(cell.value).lower(), exact_match):
                     return (cell.row, cell.column)
-            elif target_value in str(cell.value):
+            elif is_match(target_value, str(cell.value), exact_match):
                 return (cell.row, cell.column)
 
     return None

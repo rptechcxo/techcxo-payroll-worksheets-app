@@ -93,7 +93,7 @@ def main():
             partner_name = re.sub(r'\s+', ' ', partner_name)
             employee_code = ws.cell(row=coord[0]+4, column=coord[1]).value
 
-            coord = find_cell(ws, MONTH[month])
+            coord = find_cell(ws, MONTH[month], exact_match=True)
             ws.cell(row=coord[0]-1, column=coord[1]).value = get_adjusted_tenth(inputs["year_month"])
             ws.cell(row=coord[0]-1, column=coord[1]).alignment = Alignment(horizontal="center")
 
